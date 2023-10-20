@@ -6,6 +6,8 @@
 
 #define DIALOG_DURATION_SEC		4
 
+char rmb_buf[ROW_MAX][COL_MAX];
+
 void end_win(void);
 void end_no_win(void);
 
@@ -159,5 +161,84 @@ void print_status(void) {
 }
 
 void dialog(char message[]) {
+
+}
+
+void dialog_mgh(char message[])
+{
+	int k = 0;
+	if (bye >= 16)
+	{
+		k += 24;
+	}
+	else if (bye >= 12)
+	{
+		k += 16;
+	}
+	else if (bye >= 8)
+	{
+		k += 8;
+	}
+
+
+	for (int i = 0; i < ROW_MAX; i++) {
+		for (int j = 0; j < COL_MAX; j++) {
+			rmb_buf[i][j] = back_buf[i][j];
+		}
+	}
+
+	for (int i = 3; i < 8; i++) {
+		for (int j = 5; j < 30 + k; j++) {
+			back_buf[i][j] = ' ';
+		}
+	}
+
+	for (int i = 3; i < 8; i++) {
+		back_buf[i][5] = back_buf[i][29 + k] = '*';
+
+		for (int j = 6; j < 29 + k; j++) {
+			back_buf[i][j] = (i == 3 || i == 7) ? '*' : ' ';
+		}
+	}
+
+	for (int i = 3; i < 8; i++) {
+		for (int j = 5; j < 30 + k; j++) {
+			gotoxy(i, j);
+			printf("%c", back_buf[i][j]);
+		}
+	}
+
+
+	for (int i = DIALOG_DURATION_SEC; i > 0; i--)
+	{
+		gotoxy(5, 7);
+		printf("%d player ", i);
+
+		for (int j = 0; j <= bye - 2; j++)
+		{
+			printf("%c", message[j]);
+			if (j % 2 == 1)
+			{
+				printf(" ");
+			}
+		}
+		printf(" dead!");
+
+
+		Sleep(1000);
+	}
+
+	for (int i = 0; i < ROW_MAX; i++) {
+		for (int j = 0; j < COL_MAX; j++) {
+			back_buf[i][j] = rmb_buf[i][j];
+		}
+	}
+
+	for (int i = 3; i < 8; i++) {
+		for (int j = 5; j < 30 + k; j++) {
+			gotoxy(i, j);
+			printf("%c", back_buf[i][j]);
+		}
+	}
 
 }

@@ -21,4 +21,3 @@ void mugunghwa(void);
 int randint(int low, int high);
 
 #endif
-

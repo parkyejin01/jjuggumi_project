@@ -9,13 +9,12 @@
 #define DIALOG_DURATION_SEC		4
 
 char bye_p[9] = { ' ',',',' ',',',' ',',',' ',',',' ' };
-int bye = 0;
 
-char rmb_buf[ROW_MAX][COL_MAX];
 int px[PLAYER_MAX], py[PLAYER_MAX], period[PLAYER_MAX];
 int flag = 0;
 int cam_catch = 0;
 int hide = 0;
+int no_dead = 0;
 int next_game = 0;
 int ticktick = 0;
 int suc_p[PLAYER_MAX] = { 0 };
@@ -32,92 +31,19 @@ void cnt_alive(void);
 void move_p0(key_t key);
 void move_rnd(int i, int dir);
 void moving(int i, int nx, int ny);
-void dialog_mgh(char message[]);
-
-void dialog_mgh(char message[]) 
-{
-	for (int i = 0; i < ROW_MAX; i++) {
-		for (int j = 0; j < COL_MAX; j++) {
-			rmb_buf[i][j] = back_buf[i][j];
-		}
-	}
-
-	int k;
-	if (bye > 4)
-	{
-		k = 7;
-	}
-	else
-	{
-		k = 0;
-	}
-
-	for (int i = 2; i < 7; i++) {
-		for (int j = 5; j < 30 + k; j++) {
-			back_buf[i][j] = ' ';
-		}
-	}
-
-	for (int i = 2; i < 7; i++) {
-		back_buf[i][5] = back_buf[i][29 + k] = '*';
-
-		for (int j = 6; j < 29 + k; j++) {
-			back_buf[i][j] = (i == 2 || i == 6) ? '*' : ' ';
-		}
-	}
-
-	for (int i = 2; i < 7; i++) {
-		for (int j = 5; j < 30 + k; j++) {
-			gotoxy(i, j);
-			printf("%c", back_buf[i][j]);
-		}
-	}
-
-
-	for (int i = DIALOG_DURATION_SEC; i > 0; i--)
-	{
-		gotoxy(4, 7);
-		printf("%d player ", i);
-
-		for (int j = 0; j <= bye - 2; j++)
-		{
-			printf("%c", message[j]);
-			if (j % 2 == 1)
-			{
-				printf(" ");
-			}
-		}
-		printf(" dead!");
-		
-
-		Sleep(1000);
-	}
-	
-	for (int i = 0; i < ROW_MAX; i++) {
-		for (int j = 0; j < COL_MAX; j++) {
-			back_buf[i][j] = rmb_buf[i][j];
-		}
-	}
-
-	for (int i = 2; i < 7; i++) {
-		for (int j = 5; j < 30 + k; j++) {
-			gotoxy(i, j);
-			printf("%c", back_buf[i][j]);
-		}
-	}
-
-}
 
 
 
 void mugunghwa_init(void)
 {
-	map_init(9, 35);
+	map_init(11, 35);
 
 	for (int i = 0; i < n_player; i++)
 	{
+		if (n_player >= 9) { px[i] = 1 + i; }
+		else if (n_player >= 7) { px[i] = 2 + i; }
+		else { px[i] = 3 + i; }
 
-		px[i] = 3 + i;
 		py[i] = N_COL - 2;
 		period[i] = randint(20, 40);
 
@@ -136,7 +62,7 @@ void mugunghwa_init(void)
 	}
 
 
-	for (int i = 3; i < 6; i++)
+	for (int i = 4; i < 7; i++)
 	{
 		back_buf[i][1] = '#';//[3][1],[4][1],[5][1]술레 -> [2][1],[6][1],[3][2],[4][2],[5][2]통과
 	}
@@ -195,7 +121,7 @@ void display_mgh(void)
 	print_status();
 
 	next_game = 1;
-	for (int i = 1; i < 8; i++)
+	for (int i = 1; i < 10; i++)
 	{
 		if (next_game == 0)
 		{
@@ -205,7 +131,7 @@ void display_mgh(void)
 		{
 			for (int j = 1; j < 34; j++)
 			{
-				if (!((i == 3 || i == 4 || i == 5) && j == 1) && (back_buf[i][j] != ' '))
+				if (!((i == 4 || i == 5 || i == 6) && j == 1) && (back_buf[i][j] != ' '))
 				{
 					next_game = 0;
 					break;
@@ -223,7 +149,7 @@ void display_mgh(void)
 
 void yh_turn(int sayend, char yh_say[40])
 {
-	for (int i = 3; i < 6; i++)
+	for (int i = 4; i < 7; i++)
 	{
 		back_buf[i][1] = '@';
 	}
@@ -235,21 +161,24 @@ void yh_turn(int sayend, char yh_say[40])
 	{
 		printf("%c%c ", yh_say[i], yh_say[i + 1]);
 	}
+	
+	int sTime = (unsigned)time(NULL);
 	Sleep(10);
 
 	int yh_tick = 0;
 
 	while (1)
 	{
-		if (yh_tick == 2100)//2000까지도 가능할듯
+		int pTime = (unsigned)time(NULL);
+		if ((pTime - sTime) == 3)
 		{
 			if (bye > 0)
 			{
 				dialog_mgh(bye_p);
 				bye = 0;
 			}
-			
-			for (int i = 3; i < 6; i++)
+
+			for (int i = 4; i < 7; i++)
 			{
 				back_buf[i][1] = '#';
 			}
@@ -263,7 +192,7 @@ void yh_turn(int sayend, char yh_say[40])
 			{
 				printf("%c", blank[i]);
 			}
-			
+
 
 
 			return;
@@ -317,7 +246,7 @@ void yh_turn(int sayend, char yh_say[40])
 					}
 
 				}
-				if (cam_catch == 0)
+				if ((cam_catch == 0)&&(no_dead == 0))
 				{
 					player[p] = false;
 					bye_p[bye] = '0' + p;
@@ -348,13 +277,14 @@ void yh_turn(int sayend, char yh_say[40])
 			if (player[p] == false)
 			{
 				back_buf[px[p]][py[p]] = ' ';
+				suc_p[p] = 1;
 				display();
 			}
 		}
 
 
 		next_game = 1;
-		for (int i = 1; i < 8; i++)
+		for (int i = 1; i < 10; i++)
 		{
 			if (next_game == 0)
 			{
@@ -364,7 +294,7 @@ void yh_turn(int sayend, char yh_say[40])
 			{
 				for (int j = 1; j < 34; j++)
 				{
-					if (!((i == 3 || i == 4 || i == 5) && j == 1) && (back_buf[i][j] != ' '))
+					if (!((i == 4 || i == 5 || i == 6) && j == 1) && (back_buf[i][j] != ' '))
 					{
 						next_game = 0;
 						break;
@@ -424,30 +354,35 @@ void move_rnd(int player, int dir)
 			nx = px[p] + 0;
 			ny = py[p] - 1;
 			hide = 1;
+			no_dead = 0;
 		}
-		else if (rnd >= 700 && rnd < 800)
+		else if (rnd < 800)
 		{
 			nx = px[p] - 1;
 			ny = py[p] + 0;
 			hide = 0;
+			no_dead = 0;
 		}
-		else if (rnd >= 800 && rnd < 900)
+		else if (rnd < 900)
 		{
 			nx = px[p] + 1;
 			ny = py[p] + 0;
 			hide = 0;
+			no_dead = 0;
 		}
 		else
 		{
 			nx = px[p] + 0;
 			ny = py[p] + 0;
 			hide = 0;
+			no_dead = 1;
 		}
 
 		if (count > 5)//무한루프에 빠질 시, 무한루프에 빠진 플레이어는 제자리 유지하며 무한루프 탈출
 		{
 			nx = px[p] + 0;
 			ny = py[p] + 0;
+			no_dead = 1;
 			return;
 		}
 
@@ -548,6 +483,7 @@ void mugunghwa(void)
 	system("cls");
 	display();
 	//
+	bye = 0;
 
 	while (1)
 	{
@@ -560,7 +496,7 @@ void mugunghwa(void)
 		//플레이어 0제외 무작위로 실행
 		for (int i = 1; i < n_player; i++)
 		{
-			if (tick % period[i] == 0)
+			if (tick % period[i] == 0 && suc_p[i]==0)
 			{
 				move_rnd(i, -1);
 			}
@@ -590,6 +526,7 @@ void mugunghwa(void)
 			if (back_buf[px[p] + 1][py[p]] == '#' || back_buf[px[p]][py[p] - 1] == '#' || back_buf[px[p] - 1][py[p]] == '#')
 			{
 				back_buf[px[p]][py[p]] = ' ';
+				suc_p[p] = 1;
 			}
 		}
 
